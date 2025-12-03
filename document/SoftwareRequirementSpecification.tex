@@ -1,0 +1,85 @@
+\documentclass[11pt]{article}
+
+% Packages
+\usepackage[utf8]{inputenc}   % For UTF-8 encoding
+\usepackage{amsmath, amssymb} % For mathematical symbols
+\usepackage{graphicx}         % For including graphics
+\usepackage{geometry}         % For adjusting page dimensions
+\usepackage{hyperref}         % For hyperlinks
+\usepackage{booktabs}         % For nicer tables
+\usepackage{float}            % For figure placement
+
+% Page layout
+\geometry{a4paper, margin=1in}
+
+\title{Software Requirement Specification}
+\author{Yijia Zhou}
+\date{\today}
+
+% Begin Document
+\begin{document}
+
+\maketitle
+
+\section{Problem Statement}
+As machine learning models are increasingly deployed in vast domains such as healthcare, finance, and cybersecurity, it is a critical concern to maintain the reliability and fairness over time. Concept drift and algorithmic bias are tow persistent challenges that might lead to silent performance degradation and unintended discrimination, without triggering alerts in conventional monitor systems. Concept drift refers to changes in the statistical distribution of input data or the relationship between features and target labels, while bias manifests as disparate model outcomes across protected demographic groups. This paper presents a comprehensive analysis of current approaches to detecting and mitigating these phenomena, and proposes an integrated, real-time monitoring architecture to address key operational gaps in modern MLOps environments.
+Drawing from recent advances in adaptive windowing, statistical process control, and fairness-aware machine learning, we survey and critically evaluate methods capable of identifying sudden, gradual, incremental, and recurring drift types. We also explore fairness monitoring frameworks based on statistical parity difference, equalized odds, and disparate impact ratios, with emphasis on real-time deployment challenges. Case studies including adversarial attacks on Go-playing agents, degradation in medical imaging models, and regulatory concerns in healthcare AI demonstrate the urgency of proactive monitoring. Despite the availability of open-source tools like Alibi Detect, River, and Fairlearn, we find that existing systems often lack scalability, contextual awareness, and actionable feedback mechanisms.
+
+
+\section{Goals and Objectives}
+We propose a modular, microservices-based design that integrates drift detection, bias auditing, and retraining triggers into a unified platform. This architecture is optimized for streaming data environments, supports parallel evaluation across subgroups and metrics, and includes alerting logic tailored to operational and compliance thresholds. Our analysis highlights the need to move beyond offline fairness audits and retrospective diagnostics toward continuous, automated governance of AI behavior. By addressing the dual threats of drift and bias in production models, this work aims to advance the development of trustworthy, adaptive, and ethically aligned machine learning systems.
+
+\section{Functional Requirements}
+
+\subsection{Local Model Service}
+Provide a local service exposing a /predict endpoint for a small tabular model. The service must accept JSON input, run inference, and return prediction.
+
+\subsection{Prediction Logging}
+Every prediction must be logged with timestamp, input features, prediction, model version. Logs must be stored locally in a schema suitable for drift analysis.
+
+\subsection{Synthetic Stream \& Drift Simulator}
+There must be a script or component that generates synthetic data and sends it to the /predict endpoint at a controllable rate. The simulator must support phases: 
+\begin{itemize}
+\item “No drift” (data similar to training distribution) 
+\item “Drift” (distribution changes). 
+\end{itemize}
+The simulator must label each batch/window with a drift\_phase or is\_drift flag for evaluation/ground truth.
+
+\subsection{Drift Detection Engine}
+A drift detector (e.g., ADWIN or window-based KL) must run on logged data in near real time or batches. The detector must output per-window drift statistic(s), binary “drift detected” flag and timestamp/window ID
+
+
+\subsection{Minimal Dashboard}
+Provide a simple dashboard that:
+\begin{itemize}
+\item Visualizes selected feature distributions or summary stats over time
+\item Shows the drift detector’s output/flag
+\item Distinguishes between “true drift” phases and “detected drift”
+\end{itemize}
+
+\subsection{Configuration \& Reproducibility (Optional)}
+Basic configuration (e.g., window size, detection thresholds) must be easily adjustable (config file/env vars).
+
+
+\section{Non-Functional Requirements}
+
+\subsection{Simplicity \& Maintainability}
+The architecture in this phase should be single-node, no Kafka/Redis required. Components (model service, simulator, drift engine, dashboard) should be logically separated (clear modules/services).
+
+\subsection{Extensibility}
+
+It should be straightforward to:
+\begin{itemize}
+\item Swap in another model
+\item Add more drift detectors
+\item Replace local logs with Kafka/Redis later
+\end{itemize}
+
+\subsection{User Workflow}
+\begin{figure}[H]
+    \includegraphics[width=\textwidth]{ULM workflow.png}
+    \caption{User Workflow}
+\end{figure}
+
+
+\end{document}
