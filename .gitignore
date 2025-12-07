@@ -209,6 +209,11 @@ __marimo__/
 # Document
 document/
 
+# Project specific
+logs/*.jsonl
+models/*.pkl
 
 .DS_Store
 .idea/
+
+testCase/
