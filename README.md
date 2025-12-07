@@ -1,1 +1,360 @@
-# drift-detector
+# Drift Detection System
+
+A comprehensive machine learning drift detection system with synthetic data generation, model serving, and real-time drift monitoring.
+
+## Overview
+
+This system implements a complete pipeline for detecting data drift in machine learning models:
+
+- **Epic 1**: Local Model Service with prediction logging
+- **Epic 2**: Synthetic data generation with configurable drift simulation
+- **Epic 3**: Drift detection engine (Coming soon)
+- **Epic 4**: Visualization dashboard (Coming soon)
+
+## Features
+
+### ✅ Epic 1: Local Model Service
+
+- FastAPI-based prediction service
+- Pre-fitted scikit-learn Logistic Regression model
+- Automatic prediction logging in JSONL format
+- Health check endpoint
+- Request/response validation with Pydantic
+
+### ✅ Epic 2: Synthetic Stream & Drift Simulator
+
+- Configurable synthetic data generation
+- Multiple drift phases (baseline, gradual drift, abrupt drift)
+- Windowing with metadata tracking
+- Configurable request rates and window sizes
+- Ground truth drift labels for validation
+
+## Quick Start
+
+### 1. Setup
+
+```bash
+# Create and activate virtual environment
+python3 -m venv venv
+source venv/bin/activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Create the pre-fitted model
+python create_model.py
+```
+
+### 2. Start the Model Service
+
+```bash
+# Terminal 1: Start the FastAPI service
+source venv/bin/activate
+python src/model_service.py
+```
+
+The service will be available at `http://localhost:8000`
+
+### 3. Run Drift Simulation
+
+```bash
+# Terminal 2: Run the drift simulator
+source venv/bin/activate
+python src/drift_simulator.py --config config_simple.json
+```
+
+### 4. Analyze Results
+
+```bash
+# View drift statistics
+python analyze_drift.py
+```
+
+## Project Structure
+
+```
+drift-detector/
+├── src/
+│   ├── model_service.py          # FastAPI prediction service
+│   └── drift_simulator.py        # Drift simulation engine
+├── models/
+│   ├── model_v1.0.pkl            # Pre-fitted model
+│   └── model_metadata.pkl        # Model metadata
+├── logs/
+│   └── predictions_*.jsonl       # Prediction logs
+├── data/
+│   └── window_metadata.json      # Window metadata with drift labels
+├── config_simple.json            # Simple drift scenario
+├── config_example.json           # Complex multi-phase scenario
+├── create_model.py               # Model creation script
+├── test_service.py               # Epic 1 test suite
+├── analyze_drift.py              # Drift analysis tool
+└── requirements.txt              # Python dependencies
+```
+
+## Usage Guide
+
+### Testing the Model Service (Epic 1)
+
+Run the comprehensive test suite:
+
+```bash
+source venv/bin/activate
+python test_service.py
+```
+
+This tests:
+- Health check endpoint
+- Prediction endpoint
+- Multiple predictions
+- Prediction logging
+
+### Manual API Testing
+
+```bash
+# Health check
+curl http://localhost:8000/
+
+# Make a prediction
+curl -X POST http://localhost:8000/predict \
+  -H "Content-Type: application/json" \
+  -d '{
+    "features": {
+      "feature1": 3.5,
+      "feature2": 1.2,
+      "feature3": 0.8
+    }
+  }'
+```
+
+**Response:**
+```json
+{
+  "prediction": 0.016,
+  "model_version": "v1.0",
+  "timestamp": "2025-12-07T00:28:48.938254Z"
+}
+```
+
+### Configuring Drift Scenarios
+
+Create or modify JSON configuration files:
+
+```json
+{
+  "simulation": {
+    "request_rate": 20,           // Requests per second
+    "total_requests": 400,        // Total number of requests
+    "window_size": 100            // Predictions per window
+  },
+  "drift_phases": [
+    {
+      "phase_id": 1,
+      "name": "baseline",
+      "num_requests": 200,
+      "is_drift": false,
+      "drift_type": "none",
+      "distribution": {
+        "feature1": {"mean": 5.0, "std": 1.0},
+        "feature2": {"mean": 2.0, "std": 0.5},
+        "feature3": {"mean": 1.3, "std": 0.3}
+      }
+    },
+    {
+      "phase_id": 2,
+      "name": "abrupt_drift",
+      "num_requests": 200,
+      "is_drift": true,
+      "drift_type": "abrupt",
+      "distribution": {
+        "feature1": {"mean": 8.0, "std": 1.5},
+        "feature2": {"mean": 3.0, "std": 0.8},
+        "feature3": {"mean": 2.2, "std": 0.5}
+      }
+    }
+  ]
+}
+```
+
+### Running Different Scenarios
+
+```bash
+# Simple scenario: baseline → abrupt drift
+python src/drift_simulator.py --config config_simple.json
+
+# Complex scenario: baseline → gradual → abrupt drift
+python src/drift_simulator.py --config config_example.json
+
+# Custom endpoint
+python src/drift_simulator.py --config config_simple.json --url http://localhost:8000/predict
+```
+
+## Data Formats
+
+### Prediction Log Format
+
+Stored in `logs/predictions_YYYYMMDD.jsonl`:
+
+```json
+{
+  "timestamp": "2025-12-07T22:39:51.932594Z",
+  "input_features": {
+    "feature1": 5.23,
+    "feature2": 1.98,
+    "feature3": 1.25
+  },
+  "prediction": 0.0788,
+  "model_version": "v1.0",
+  "drift_phase": 1
+}
+```
+
+### Window Metadata Format
+
+Stored in `data/window_metadata.json`:
+
+```json
+{
+  "window_id": 0,
+  "start_timestamp": "2025-12-07T22:39:51.932594Z",
+  "end_timestamp": "2025-12-07T22:39:57.739748Z",
+  "is_drift": false,
+  "is_simulated": true,
+  "number_of_predictions": 100
+}
+```
+
+## Example Results
+
+### Simulation Output
+
+```
+============================================================
+Drift Simulator - Epic 2
+============================================================
+Configuration:
+  Request rate: 20 req/s
+  Total requests: 400
+  Window size: 100
+  Drift phases: 2
+
+✓ Model service is running: v1.0
+
+→ Starting Phase 1: baseline (drift=False)
+  ✓ Window 0 completed: 100 predictions, drift=False
+  ✓ Window 1 completed: 100 predictions, drift=False
+
+→ Entering Phase 2: abrupt_drift (drift=True)
+  ✓ Window 2 completed: 100 predictions, drift=True
+  ✓ Window 3 completed: 100 predictions, drift=True
+
+============================================================
+Simulation Complete
+============================================================
+Total requests sent: 400/400
+Success rate: 100.0%
+Total windows: 4
+```
+
+### Drift Analysis
+
+```
+Window 0 (drift=False):
+  Mean:  0.0788  ← Baseline
+  Std:   0.0855
+
+Window 1 (drift=False):
+  Mean:  0.0771  ← Baseline
+  Std:   0.0670
+
+Window 2 (drift=True):
+  Mean:  0.4932  ← Drift detected! (6.5x increase)
+  Std:   0.2753
+
+Window 3 (drift=True):
+  Mean:  0.5390  ← Drift continues
+  Std:   0.2973
+```
+
+The prediction mean shifts from **~0.078** to **~0.52**, demonstrating clear, detectable drift.
+
+## Development
+
+### Adding New Features
+
+1. Model service endpoints: Edit `src/model_service.py`
+2. Drift simulation logic: Edit `src/drift_simulator.py`
+3. Configuration schemas: Create new JSON config files
+
+### Running Tests
+
+```bash
+# Epic 1 tests
+python test_service.py
+
+# Drift analysis
+python analyze_drift.py
+```
+
+### Viewing Logs
+
+```bash
+# Latest predictions
+tail -f logs/predictions_*.jsonl
+
+# Window metadata
+cat data/window_metadata.json | python -m json.tool
+```
+
+## Dependencies
+
+- `fastapi==0.104.1` - Web framework
+- `uvicorn==0.24.0` - ASGI server
+- `scikit-learn==1.3.2` - ML model
+- `numpy==1.26.2` - Numerical computing
+- `pydantic==2.5.0` - Data validation
+- `requests` - HTTP client (for testing)
+
+## API Reference
+
+### Health Check
+
+**GET** `/`
+
+Returns service status and model version.
+
+### Predict
+
+**POST** `/predict`
+
+**Request:**
+```json
+{
+  "features": {
+    "feature1": 3.5,
+    "feature2": 1.2,
+    "feature3": 0.8
+  }
+}
+```
+
+**Response:**
+```json
+{
+  "prediction": 0.5,
+  "model_version": "v1.0",
+  "timestamp": "2025-11-21T10:00:00Z"
+}
+```
+
+## Roadmap
+
+- [x] Epic 1: Local Model Service
+- [x] Epic 2: Synthetic Stream & Drift Simulator
+- [ ] Epic 3: Drift Detection Engine (ADWIN)
+- [ ] Epic 4: Visualization Dashboard
+- [ ] Epic 5: Storage & Integration
+
+## License
+
+See LICENSE file for details.
