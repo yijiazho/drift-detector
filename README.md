@@ -8,7 +8,7 @@ This system implements a complete pipeline for detecting data drift in machine l
 
 - **Epic 1**: Local Model Service with prediction logging
 - **Epic 2**: Synthetic data generation with configurable drift simulation
-- **Epic 3**: Drift detection engine (Coming soon)
+- **Epic 3**: ADWIN-based drift detection engine
 - **Epic 4**: Visualization dashboard (Coming soon)
 
 ## Features
@@ -28,6 +28,15 @@ This system implements a complete pipeline for detecting data drift in machine l
 - Windowing with metadata tracking
 - Configurable request rates and window sizes
 - Ground truth drift labels for validation
+
+### ✅ Epic 3: Drift Detection Engine
+
+- ADWIN (Adaptive Windowing) algorithm from River library
+- Automatic drift detection on prediction streams
+- Configurable sensitivity (delta parameter)
+- Statistical drift metrics (mean difference from baseline)
+- Ground truth comparison and accuracy metrics
+- JSON output with detection results per window
 
 ## Quick Start
 
@@ -63,7 +72,15 @@ source venv/bin/activate
 python src/drift_simulator.py --config config_simple.json
 ```
 
-### 4. Analyze Results
+### 4. Detect Drift
+
+```bash
+# Terminal 3: Run drift detection
+source venv/bin/activate
+python src/drift_detector.py
+```
+
+### 5. Analyze Results
 
 ```bash
 # View drift statistics
@@ -76,19 +93,22 @@ python analyze_drift.py
 drift-detector/
 ├── src/
 │   ├── model_service.py          # FastAPI prediction service
-│   └── drift_simulator.py        # Drift simulation engine
+│   ├── drift_simulator.py        # Drift simulation engine
+│   └── drift_detector.py         # ADWIN drift detection engine
 ├── models/
 │   ├── model_v1.0.pkl            # Pre-fitted model
 │   └── model_metadata.pkl        # Model metadata
 ├── logs/
 │   └── predictions_*.jsonl       # Prediction logs
 ├── data/
-│   └── window_metadata.json      # Window metadata with drift labels
+│   ├── window_metadata.json      # Window metadata with drift labels
+│   └── drift_detection.json      # Drift detection results
 ├── config_simple.json            # Simple drift scenario
 ├── config_example.json           # Complex multi-phase scenario
 ├── create_model.py               # Model creation script
 ├── test_service.py               # Epic 1 test suite
 ├── analyze_drift.py              # Drift analysis tool
+├── TODO.md                       # Future enhancements
 └── requirements.txt              # Python dependencies
 ```
 
@@ -189,6 +209,39 @@ python src/drift_simulator.py --config config_example.json
 python src/drift_simulator.py --config config_simple.json --url http://localhost:8000/predict
 ```
 
+### Detecting Drift (Epic 3)
+
+After running a simulation, detect drift using ADWIN:
+
+```bash
+# Basic usage (uses today's log file)
+python src/drift_detector.py
+
+# Specify log file and parameters
+python src/drift_detector.py \
+  --log-file logs/predictions_20251208.jsonl \
+  --metadata data/window_metadata.json \
+  --window-size 100 \
+  --delta 0.002 \
+  --output data/drift_detection.json
+
+# More sensitive detection (lower delta)
+python src/drift_detector.py --delta 0.001
+
+# Less sensitive detection (higher delta)
+python src/drift_detector.py --delta 0.01
+```
+
+**Parameters:**
+- `--delta`: ADWIN sensitivity (default: 0.002)
+  - Lower = more sensitive (more detections)
+  - Higher = less sensitive (fewer false positives)
+- `--window-size`: Predictions per window (default: 100)
+- `--log-file`: Path to predictions JSONL file
+- `--metadata`: Path to window metadata (optional, for ground truth comparison)
+- `--output`: Output file for detection results
+```
+
 ## Data Formats
 
 ### Prediction Log Format
@@ -221,6 +274,25 @@ Stored in `data/window_metadata.json`:
   "is_drift": false,
   "is_simulated": true,
   "number_of_predictions": 100
+}
+```
+
+### Drift Detection Output Format
+
+Stored in `data/drift_detection.json`:
+
+```json
+{
+  "window_id": 2,
+  "timestamp": "2025-12-08T00:30:39.573019Z",
+  "drift_statistic": 0.429292,
+  "drift_detected": true,
+  "adwin_detected": true,
+  "baseline_mean": 0.071059,
+  "current_mean": 0.50035,
+  "current_std": 0.320717,
+  "predictions_processed": 100,
+  "ground_truth_drift": true
 }
 ```
 
@@ -278,6 +350,47 @@ Window 3 (drift=True):
 
 The prediction mean shifts from **~0.078** to **~0.52**, demonstrating clear, detectable drift.
 
+### Drift Detection Output
+
+```
+======================================================================
+Drift Detection Engine - Epic 3
+======================================================================
+Configuration:
+  Window size: 100
+  ADWIN delta: 0.002
+  Total predictions: 400
+
+Processing windows...
+  Window  0: STABLE | stat=0.0000 | mean=0.0711 | Ground truth: STABLE ✓
+  Window  1: STABLE | stat=0.0112 | mean=0.0823 | Ground truth: STABLE ✓
+  Window  2: DRIFT  | stat=0.4293 | mean=0.5003 | Ground truth: DRIFT ✓
+  Window  3: STABLE | stat=0.4830 | mean=0.5541 | Ground truth: DRIFT ✗
+
+======================================================================
+Detection Summary
+======================================================================
+Total windows: 4
+Drift detected: 1
+Stable: 3
+
+Ground Truth Comparison:
+  Accuracy: 75.0% (3/4)
+  True Positives:  1
+  False Positives: 0
+  True Negatives:  2
+  False Negatives: 1
+  Precision: 1.00
+  Recall: 0.50
+```
+
+**Interpretation:**
+- ADWIN detected drift in window 2 (first drift window) ✓
+- Window 3 marked as stable because ADWIN already adapted to the new distribution
+- This is expected behavior: ADWIN detects the *change*, not the ongoing *state*
+- Perfect precision (no false positives)
+- 50% recall (missed detecting continuation in window 3)
+
 ## Development
 
 ### Adding New Features
@@ -313,6 +426,7 @@ cat data/window_metadata.json | python -m json.tool
 - `scikit-learn==1.3.2` - ML model
 - `numpy==1.26.2` - Numerical computing
 - `pydantic==2.5.0` - Data validation
+- `river==0.21.0` - Streaming ML algorithms (ADWIN)
 - `requests` - HTTP client (for testing)
 
 ## API Reference
@@ -351,9 +465,11 @@ Returns service status and model version.
 
 - [x] Epic 1: Local Model Service
 - [x] Epic 2: Synthetic Stream & Drift Simulator
-- [ ] Epic 3: Drift Detection Engine (ADWIN)
+- [x] Epic 3: Drift Detection Engine (ADWIN)
 - [ ] Epic 4: Visualization Dashboard
 - [ ] Epic 5: Storage & Integration
+
+See [TODO.md](TODO.md) for planned enhancements and future features.
 
 ## License
 

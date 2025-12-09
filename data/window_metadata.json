@@ -1,80 +1,32 @@
 [
   {
     "window_id": 0,
-    "start_timestamp": "2025-12-07T23:36:19.522431Z",
-    "end_timestamp": "2025-12-07T23:36:30.642629Z",
+    "start_timestamp": "2025-12-08T00:30:21.832063Z",
+    "end_timestamp": "2025-12-08T00:30:27.648780Z",
     "is_drift": false,
     "is_simulated": true,
     "number_of_predictions": 100
   },
   {
     "window_id": 1,
-    "start_timestamp": "2025-12-07T23:36:30.642643Z",
-    "end_timestamp": "2025-12-07T23:36:41.903588Z",
+    "start_timestamp": "2025-12-08T00:30:27.648786Z",
+    "end_timestamp": "2025-12-08T00:30:33.559839Z",
     "is_drift": false,
     "is_simulated": true,
     "number_of_predictions": 100
   },
   {
     "window_id": 2,
-    "start_timestamp": "2025-12-07T23:36:41.903602Z",
-    "end_timestamp": "2025-12-07T23:36:53.136541Z",
-    "is_drift": false,
+    "start_timestamp": "2025-12-08T00:30:33.559846Z",
+    "end_timestamp": "2025-12-08T00:30:39.575834Z",
+    "is_drift": true,
     "is_simulated": true,
     "number_of_predictions": 100
   },
   {
     "window_id": 3,
-    "start_timestamp": "2025-12-07T23:36:53.136556Z",
-    "end_timestamp": "2025-12-07T23:37:04.395792Z",
-    "is_drift": true,
-    "is_simulated": true,
-    "number_of_predictions": 100
-  },
-  {
-    "window_id": 4,
-    "start_timestamp": "2025-12-07T23:37:04.395797Z",
-    "end_timestamp": "2025-12-07T23:37:15.658802Z",
-    "is_drift": true,
-    "is_simulated": true,
-    "number_of_predictions": 100
-  },
-  {
-    "window_id": 5,
-    "start_timestamp": "2025-12-07T23:37:15.658816Z",
-    "end_timestamp": "2025-12-07T23:37:26.825807Z",
-    "is_drift": true,
-    "is_simulated": true,
-    "number_of_predictions": 100
-  },
-  {
-    "window_id": 6,
-    "start_timestamp": "2025-12-07T23:37:26.825821Z",
-    "end_timestamp": "2025-12-07T23:37:38.037816Z",
-    "is_drift": true,
-    "is_simulated": true,
-    "number_of_predictions": 100
-  },
-  {
-    "window_id": 7,
-    "start_timestamp": "2025-12-07T23:37:38.037830Z",
-    "end_timestamp": "2025-12-07T23:37:49.250346Z",
-    "is_drift": true,
-    "is_simulated": true,
-    "number_of_predictions": 100
-  },
-  {
-    "window_id": 8,
-    "start_timestamp": "2025-12-07T23:37:49.250365Z",
-    "end_timestamp": "2025-12-07T23:38:00.489895Z",
-    "is_drift": true,
-    "is_simulated": true,
-    "number_of_predictions": 100
-  },
-  {
-    "window_id": 9,
-    "start_timestamp": "2025-12-07T23:38:00.489909Z",
-    "end_timestamp": "2025-12-07T23:38:11.743042Z",
+    "start_timestamp": "2025-12-08T00:30:39.575853Z",
+    "end_timestamp": "2025-12-08T00:30:45.616542Z",
     "is_drift": true,
     "is_simulated": true,
     "number_of_predictions": 100
