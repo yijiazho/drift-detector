@@ -69,7 +69,7 @@ The service will be available at `http://localhost:8000`
 ```bash
 # Terminal 2: Run the drift simulator
 source venv/bin/activate
-python src/drift_simulator.py --config config_simple.json
+python src/drift_simulator.py --config configs/config_simple.json
 ```
 
 ### 4. Detect Drift
@@ -95,16 +95,19 @@ drift-detector/
 │   ├── model_service.py          # FastAPI prediction service
 │   ├── drift_simulator.py        # Drift simulation engine
 │   └── drift_detector.py         # ADWIN drift detection engine
+├── configs/
+│   ├── config_simple.json        # Simple drift scenario
+│   └── config_multiple_drifts.json  # Complex multi-phase scenario
 ├── models/
 │   ├── model_v1.0.pkl            # Pre-fitted model
 │   └── model_metadata.pkl        # Model metadata
 ├── logs/
 │   └── predictions_*.jsonl       # Prediction logs
-├── data/
-│   ├── window_metadata.json      # Window metadata with drift labels
-│   └── drift_detection.json      # Drift detection results
-├── config_simple.json            # Simple drift scenario
-├── config_example.json           # Complex multi-phase scenario
+├── outputs/
+│   ├── metadata/
+│   │   └── window_metadata.json  # Window metadata with drift labels
+│   └── detection/
+│       └── drift_detection.json  # Drift detection results
 ├── create_model.py               # Model creation script
 ├── test_service.py               # Epic 1 test suite
 ├── analyze_drift.py              # Drift analysis tool
@@ -200,13 +203,16 @@ Create or modify JSON configuration files:
 
 ```bash
 # Simple scenario: baseline → abrupt drift
-python src/drift_simulator.py --config config_simple.json
+python src/drift_simulator.py --config configs/config_simple.json
 
 # Complex scenario: baseline → gradual → abrupt drift
-python src/drift_simulator.py --config config_example.json
+python src/drift_simulator.py --config configs/config_multiple_drifts.json
 
-# Custom endpoint
-python src/drift_simulator.py --config config_simple.json --url http://localhost:8000/predict
+# Custom output and endpoint
+python src/drift_simulator.py \
+  --config configs/config_simple.json \
+  --output outputs/metadata/my_run.json \
+  --url http://localhost:8000/predict
 ```
 
 ### Detecting Drift (Epic 3)
@@ -214,16 +220,16 @@ python src/drift_simulator.py --config config_simple.json --url http://localhost
 After running a simulation, detect drift using ADWIN:
 
 ```bash
-# Basic usage (uses today's log file)
+# Basic usage (uses today's log file automatically)
 python src/drift_detector.py
 
 # Specify log file and parameters
 python src/drift_detector.py \
   --log-file logs/predictions_20251208.jsonl \
-  --metadata data/window_metadata.json \
+  --metadata outputs/metadata/window_metadata.json \
   --window-size 100 \
   --delta 0.002 \
-  --output data/drift_detection.json
+  --output outputs/detection/drift_detection.json
 
 # More sensitive detection (lower delta)
 python src/drift_detector.py --delta 0.001
@@ -233,13 +239,13 @@ python src/drift_detector.py --delta 0.01
 ```
 
 **Parameters:**
+- `--log-file`: Path to predictions JSONL file (default: today's date)
+- `--metadata`: Path to window metadata (default: outputs/metadata/window_metadata.json)
+- `--window-size`: Predictions per window (default: 100)
 - `--delta`: ADWIN sensitivity (default: 0.002)
   - Lower = more sensitive (more detections)
   - Higher = less sensitive (fewer false positives)
-- `--window-size`: Predictions per window (default: 100)
-- `--log-file`: Path to predictions JSONL file
-- `--metadata`: Path to window metadata (optional, for ground truth comparison)
-- `--output`: Output file for detection results
+- `--output`: Output file for detection results (default: outputs/detection/drift_detection.json)
 ```
 
 ## Data Formats
@@ -264,7 +270,7 @@ Stored in `logs/predictions_YYYYMMDD.jsonl`:
 
 ### Window Metadata Format
 
-Stored in `data/window_metadata.json`:
+Stored in `outputs/metadata/window_metadata.json`:
 
 ```json
 {
@@ -279,7 +285,7 @@ Stored in `data/window_metadata.json`:
 
 ### Drift Detection Output Format
 
-Stored in `data/drift_detection.json`:
+Stored in `outputs/detection/drift_detection.json`:
 
 ```json
 {
@@ -416,7 +422,10 @@ python analyze_drift.py
 tail -f logs/predictions_*.jsonl
 
 # Window metadata
-cat data/window_metadata.json | python -m json.tool
+cat outputs/metadata/window_metadata.json | python -m json.tool
+
+# Drift detection results
+cat outputs/detection/drift_detection.json | python -m json.tool
 ```
 
 ## Dependencies

@@ -215,14 +215,14 @@ class DriftDetector:
 
         print()
 
-    def save_results(self, output_path: str = "data/drift_detection.json"):
+    def save_results(self, output_path: str = "outputs/detection/drift_detection.json"):
         """
         Save drift detection results to JSON file.
 
         Args:
             output_path: Path to output JSON file
         """
-        Path(output_path).parent.mkdir(exist_ok=True)
+        Path(output_path).parent.mkdir(parents=True, exist_ok=True)
 
         with open(output_path, "w") as f:
             json.dump(self.detection_results, f, indent=2)
@@ -278,46 +278,107 @@ class DriftDetector:
 def main():
     """Main entry point for drift detection."""
     import argparse
+    import sys
+    import os
 
-    parser = argparse.ArgumentParser(description="Detect drift in prediction logs")
+    parser = argparse.ArgumentParser(
+        description="Detect drift in prediction logs using ADWIN algorithm",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  # Basic usage - will prompt for log file if not provided
+  python src/drift_detector.py --log-file logs/predictions_20251208.jsonl
+
+  # Specify all parameters
+  python src/drift_detector.py --log-file logs/predictions_20251208.jsonl --metadata outputs/metadata/window_metadata.json
+
+  # Adjust sensitivity
+  python src/drift_detector.py --log-file logs/predictions_20251208.jsonl --delta 0.001  # More sensitive
+  python src/drift_detector.py --log-file logs/predictions_20251208.jsonl --delta 0.01   # Less sensitive
+
+  # Custom output location
+  python src/drift_detector.py --log-file logs/predictions_20251208.jsonl --output outputs/detection/my_detection.json
+        """
+    )
     parser.add_argument(
         "--log-file",
         type=str,
-        default="logs/predictions_20251207.jsonl",
-        help="Path to predictions log file"
+        required=False,
+        help="Path to predictions JSONL file (required - will prompt if not provided)"
     )
     parser.add_argument(
         "--metadata",
         type=str,
-        default="data/window_metadata.json",
-        help="Path to window metadata file (optional)"
+        default="outputs/metadata/window_metadata.json",
+        help="Path to window metadata JSON file (default: outputs/metadata/window_metadata.json)"
     )
     parser.add_argument(
         "--window-size",
         type=int,
         default=100,
-        help="Window size for drift detection"
+        help="Number of predictions per window (default: 100)"
     )
     parser.add_argument(
         "--delta",
         type=float,
         default=0.002,
-        help="ADWIN delta parameter (smaller = more sensitive)"
+        help="ADWIN sensitivity parameter - smaller=more sensitive (default: 0.002)"
     )
     parser.add_argument(
         "--output",
         type=str,
-        default="data/drift_detection.json",
-        help="Output file for detection results"
+        default="outputs/detection/drift_detection.json",
+        help="Output path for detection results (default: outputs/detection/drift_detection.json)"
     )
 
     args = parser.parse_args()
+
+    # Get log file path - prompt if not provided
+    log_file = args.log_file
+    if not log_file:
+        print("\n" + "=" * 70)
+        print("Drift Detection - Log File Required")
+        print("=" * 70)
+        print("\nAvailable log files in logs/ directory:")
+
+        # List available log files
+        if os.path.exists("logs"):
+            log_files = sorted([f for f in os.listdir("logs") if f.endswith(".jsonl")])
+            if log_files:
+                for i, f in enumerate(log_files, 1):
+                    print(f"  {i}. {f}")
+                print()
+            else:
+                print("  (no log files found)")
+                print("\n✗ Please run drift simulation first to generate prediction logs.")
+                sys.exit(1)
+        else:
+            print("  (logs directory not found)")
+            print("\n✗ Please run drift simulation first to generate prediction logs.")
+            sys.exit(1)
+
+        # Prompt for log file
+        log_file = input("\nEnter the log file name (or full path): ").strip()
+
+        if not log_file:
+            print("\n✗ Error: Log file is required.")
+            sys.exit(1)
+
+        # If user entered just a filename, prepend logs/
+        if not log_file.startswith("logs/") and not os.path.exists(log_file):
+            log_file = f"logs/{log_file}"
 
     # Initialize detector
     detector = DriftDetector(window_size=args.window_size, delta=args.delta)
 
     # Load data
-    predictions = detector.load_predictions(args.log_file)
+    try:
+        predictions = detector.load_predictions(log_file)
+    except FileNotFoundError:
+        print(f"\n✗ Error: Log file not found at {log_file}")
+        print(f"  Make sure the file exists and the path is correct.")
+        print(f"  Run drift simulation first to generate prediction logs.")
+        sys.exit(1)
 
     # Load metadata if available
     metadata = None
