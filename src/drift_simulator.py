@@ -150,9 +150,9 @@ class DriftSimulator:
 
             print(f"  ✓ Window {metadata['window_id']} completed: {metadata['number_of_predictions']} predictions, drift={is_drift}")
 
-    def save_window_metadata(self, output_path: str = "data/window_metadata.json"):
+    def save_window_metadata(self, output_path: str = "outputs/metadata/window_metadata.json"):
         """Save window metadata to JSON file."""
-        Path(output_path).parent.mkdir(exist_ok=True)
+        Path(output_path).parent.mkdir(parents=True, exist_ok=True)
 
         with open(output_path, "w") as f:
             json.dump(self.window_metadata, f, indent=2)
@@ -240,24 +240,48 @@ def main():
     """Main entry point."""
     import argparse
 
-    parser = argparse.ArgumentParser(description="Run drift simulation")
+    parser = argparse.ArgumentParser(
+        description="Run drift simulation with configurable data generation",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  # Simple scenario
+  python src/drift_simulator.py --config configs/config_simple.json
+
+  # Custom output location
+  python src/drift_simulator.py --config configs/config_simple.json --output outputs/metadata/my_metadata.json
+
+  # Different endpoint
+  python src/drift_simulator.py --config configs/config_simple.json --url http://localhost:9000/predict
+        """
+    )
     parser.add_argument(
         "--config",
         type=str,
-        default="config_example.json",
-        help="Path to configuration file"
+        default="configs/config_simple.json",
+        help="Path to configuration JSON file (default: configs/config_simple.json)"
     )
     parser.add_argument(
         "--url",
         type=str,
         default="http://localhost:8000/predict",
-        help="URL of the /predict endpoint"
+        help="URL of the /predict endpoint (default: http://localhost:8000/predict)"
+    )
+    parser.add_argument(
+        "--output",
+        type=str,
+        default="outputs/metadata/window_metadata.json",
+        help="Output path for window metadata (default: outputs/metadata/window_metadata.json)"
     )
 
     args = parser.parse_args()
 
     simulator = DriftSimulator(args.config, args.url)
     simulator.run()
+
+    # Save with custom output path if specified
+    if args.output != "outputs/metadata/window_metadata.json":
+        simulator.save_window_metadata(args.output)
 
 
 if __name__ == "__main__":

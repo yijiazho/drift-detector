@@ -209,9 +209,12 @@ __marimo__/
 # Document
 document/
 
-# Project specific
+# Project specific - Drift Detector
 logs/*.jsonl
 models/*.pkl
+outputs/**/*.json
+data/*.json
+data/*.csv
 
 .DS_Store
 .idea/

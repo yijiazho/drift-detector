@@ -83,26 +83,79 @@ def analyze_by_phase(predictions):
 def main():
     """Main entry point."""
     import argparse
+    import sys
+    import os
 
-    parser = argparse.ArgumentParser(description="Analyze drift in predictions")
+    parser = argparse.ArgumentParser(
+        description="Analyze drift statistics in prediction logs",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  # Basic usage - will prompt for log file if not provided
+  python analyze_drift.py --log-file logs/predictions_20251208.jsonl
+
+  # Specify custom files
+  python analyze_drift.py --log-file logs/predictions_20251208.jsonl --metadata outputs/metadata/window_metadata.json
+        """
+    )
     parser.add_argument(
         "--log-file",
         type=str,
-        default="logs/predictions_20251207.jsonl",
-        help="Path to predictions log file"
+        required=False,
+        help="Path to predictions JSONL file (required - will prompt if not provided)"
     )
     parser.add_argument(
         "--metadata",
         type=str,
-        default="data/window_metadata.json",
-        help="Path to window metadata file"
+        default="outputs/metadata/window_metadata.json",
+        help="Path to window metadata JSON file (default: outputs/metadata/window_metadata.json)"
     )
 
     args = parser.parse_args()
 
+    # Get log file path - prompt if not provided
+    log_file = args.log_file
+    if not log_file:
+        print("\n" + "=" * 70)
+        print("Drift Analysis - Log File Required")
+        print("=" * 70)
+        print("\nAvailable log files in logs/ directory:")
+
+        # List available log files
+        if os.path.exists("logs"):
+            log_files = sorted([f for f in os.listdir("logs") if f.endswith(".jsonl")])
+            if log_files:
+                for i, f in enumerate(log_files, 1):
+                    print(f"  {i}. {f}")
+                print()
+            else:
+                print("  (no log files found)")
+                print("\n✗ Please run drift simulation first to generate prediction logs.")
+                sys.exit(1)
+        else:
+            print("  (logs directory not found)")
+            print("\n✗ Please run drift simulation first to generate prediction logs.")
+            sys.exit(1)
+
+        # Prompt for log file
+        log_file = input("\nEnter the log file name (or full path): ").strip()
+
+        if not log_file:
+            print("\n✗ Error: Log file is required.")
+            sys.exit(1)
+
+        # If user entered just a filename, prepend logs/
+        if not log_file.startswith("logs/") and not os.path.exists(log_file):
+            log_file = f"logs/{log_file}"
+
     # Load data
-    predictions = load_predictions(args.log_file)
-    windows = load_window_metadata(args.metadata)
+    try:
+        predictions = load_predictions(log_file)
+        windows = load_window_metadata(args.metadata)
+    except FileNotFoundError as e:
+        print(f"\n✗ Error: File not found - {e}")
+        print(f"  Make sure to run drift simulation first.")
+        sys.exit(1)
 
     print(f"\nLoaded {len(predictions)} predictions across {len(windows)} windows\n")
 
