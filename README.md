@@ -9,7 +9,8 @@ This system implements a complete pipeline for detecting data drift in machine l
 - **Epic 1**: Local Model Service with prediction logging
 - **Epic 2**: Synthetic data generation with configurable drift simulation
 - **Epic 3**: ADWIN-based drift detection engine
-- **Epic 4**: Visualization dashboard (Coming soon)
+- **Epic 4**: Streamlit visualization dashboard
+- **Epic 5**: Unified storage schemas and integration tests
 
 ## Features
 
@@ -37,6 +38,24 @@ This system implements a complete pipeline for detecting data drift in machine l
 - Statistical drift metrics (mean difference from baseline)
 - Ground truth comparison and accuracy metrics
 - JSON output with detection results per window
+
+### ✅ Epic 4: Visualization Dashboard
+
+- Interactive Streamlit web application
+- Feature distribution visualization over time
+- Drift detection results with ground truth comparison
+- Time range filtering with window-based navigation
+- Responsive charts using Plotly
+- Log file selection and data exploration
+
+### ✅ Epic 5: Storage & Integration
+
+- Unified JSON Schema definitions for all data formats
+- Schema validation with detailed error messages
+- Data manager with type-safe operations
+- Comprehensive end-to-end integration tests
+- Automatic validation of existing data files
+- Version-aware schema registry
 
 ## Quick Start
 
@@ -84,7 +103,27 @@ python src/drift_detector.py
 
 ```bash
 # View drift statistics
-python analyze_drift.py
+python analyze_drift.py --log-file logs/predictions_YYYYMMDD.jsonl
+```
+
+### 6. Launch Dashboard
+
+```bash
+# Start the interactive dashboard
+streamlit run dashboard.py
+```
+
+The dashboard will open in your browser at `http://localhost:8501`
+
+### 7. Validate Data (Epic 5)
+
+```bash
+# Quick validation - verify all data and run tests
+python validate_epic5.py
+
+# Or run individually:
+python src/data_manager.py           # Validate existing data files
+python tests/test_integration.py     # Run integration tests
 ```
 
 ## Project Structure
@@ -94,7 +133,17 @@ drift-detector/
 ├── src/
 │   ├── model_service.py          # FastAPI prediction service
 │   ├── drift_simulator.py        # Drift simulation engine
-│   └── drift_detector.py         # ADWIN drift detection engine
+│   ├── drift_detector.py         # ADWIN drift detection engine
+│   └── data_manager.py           # Unified data operations (Epic 5)
+├── schemas/                       # JSON Schema definitions (Epic 5)
+│   ├── prediction_v1.json        # Prediction schema
+│   ├── window_metadata_v1.json   # Window metadata schema
+│   ├── drift_detection_v1.json   # Drift detection schema
+│   ├── config_v1.json            # Configuration schema
+│   └── schema_registry.py        # Schema validation utilities
+├── tests/                         # Integration tests (Epic 5)
+│   ├── __init__.py
+│   └── test_integration.py       # End-to-end test suite
 ├── configs/
 │   ├── config_simple.json        # Simple drift scenario
 │   └── config_multiple_drifts.json  # Complex multi-phase scenario
@@ -108,9 +157,11 @@ drift-detector/
 │   │   └── window_metadata.json  # Window metadata with drift labels
 │   └── detection/
 │       └── drift_detection.json  # Drift detection results
+├── dashboard.py                  # Streamlit visualization dashboard
 ├── create_model.py               # Model creation script
 ├── test_service.py               # Epic 1 test suite
 ├── analyze_drift.py              # Drift analysis tool
+├── EPIC5_IMPLEMENTATION.md       # Epic 5 documentation
 ├── TODO.md                       # Future enhancements
 └── requirements.txt              # Python dependencies
 ```
@@ -247,6 +298,82 @@ python src/drift_detector.py --delta 0.01
   - Higher = less sensitive (fewer false positives)
 - `--output`: Output file for detection results (default: outputs/detection/drift_detection.json)
 ```
+
+### Visualization Dashboard (Epic 4)
+
+Launch the interactive dashboard to visualize drift detection results:
+
+```bash
+streamlit run dashboard.py
+```
+
+**Dashboard Features:**
+- **Feature Selection**: Choose which feature to visualize from dropdown
+- **Time Series Plot**: View feature values over time with drift markers
+- **Distribution Histogram**: See feature value distribution
+- **Drift Detection Chart**: Visualize drift statistics with detection points
+- **Ground Truth Comparison**: Compare detected drift vs actual drift (if available)
+- **Time Range Filtering**: Use slider to filter by window range
+- **Log File Selection**: Switch between different prediction log files
+
+**Tips:**
+- The dashboard automatically loads the latest log file
+- Use the window range slider to zoom into specific time periods
+- Hover over charts for detailed information
+- Red vertical lines indicate detected drift points
+- Green/red markers show true/false positives in detection
+
+### Schema Validation & Integration Tests (Epic 5)
+
+Validate data integrity and run end-to-end tests:
+
+```bash
+# Validate all existing data files
+python src/data_manager.py
+
+# Run comprehensive integration tests
+python tests/test_integration.py
+```
+
+**Validation Output:**
+```
+✓ predictions_20251210.jsonl
+✓ window_metadata.json
+✓ drift_detection.json
+✓ config_simple.json
+Summary: 6/6 files passed validation
+```
+
+**Integration Tests:**
+- Configuration validation
+- Model service health check
+- Prediction log validation
+- Window metadata validation
+- Drift detection validation
+- Data consistency checks
+- Ground truth comparison
+- Schema error handling
+
+**Using the Data Manager in Code:**
+```python
+from src.data_manager import DataManager
+from pathlib import Path
+
+# Initialize with validation
+dm = DataManager(validate=True)
+
+# Read data with automatic validation
+config = dm.read_config(Path('configs/config_simple.json'))
+predictions = dm.read_predictions(Path('logs/predictions_20251210.jsonl'))
+windows = dm.read_window_metadata(Path('outputs/metadata/window_metadata.json'))
+detections = dm.read_drift_detections(Path('outputs/detection/drift_detection.json'))
+
+# Write data with validation
+dm.write_window_metadata(output_file, windows_list)
+dm.write_drift_detections(output_file, detections_list)
+```
+
+For detailed Epic 5 documentation, see [EPIC5_IMPLEMENTATION.md](EPIC5_IMPLEMENTATION.md)
 
 ## Data Formats
 
@@ -405,15 +532,36 @@ Ground Truth Comparison:
 2. Drift simulation logic: Edit `src/drift_simulator.py`
 3. Configuration schemas: Create new JSON config files
 
-### Running Tests
+### Testing
 
+**Comprehensive Test Plan**: 143+ test cases across all epics documented in `TEST_PLAN.md`
+
+**Current Tests**:
 ```bash
-# Epic 1 tests
+# Epic 1: Model Service Tests
 python test_service.py
 
-# Drift analysis
-python analyze_drift.py
+# Epic 5: Integration Tests
+python tests/test_integration.py
+
+# Run all tests with pytest
+pytest tests/ -v
+
+# With coverage report
+pytest --cov=src --cov-report=html
 ```
+
+**Test Coverage**:
+- ✅ Epic 1: Basic model service tests (4 tests)
+- ✅ Epic 5: Integration tests (11 tests)
+- ○ Full test suite: 143+ tests documented, ready to implement
+
+**Install Test Dependencies**:
+```bash
+pip install pytest pytest-cov pytest-mock pytest-asyncio httpx
+```
+
+See [TEST_PLAN.md](TEST_PLAN.md) for complete test specifications and [TEST_PLAN_SUMMARY.md](TEST_PLAN_SUMMARY.md) for implementation guide.
 
 ### Viewing Logs
 
@@ -436,6 +584,9 @@ cat outputs/detection/drift_detection.json | python -m json.tool
 - `numpy==1.26.2` - Numerical computing
 - `pydantic==2.5.0` - Data validation
 - `river==0.21.0` - Streaming ML algorithms (ADWIN)
+- `streamlit==1.29.0` - Dashboard framework
+- `plotly==5.18.0` - Interactive visualizations
+- `jsonschema==4.20.0` - JSON Schema validation (Epic 5)
 - `requests` - HTTP client (for testing)
 
 ## API Reference
@@ -475,8 +626,8 @@ Returns service status and model version.
 - [x] Epic 1: Local Model Service
 - [x] Epic 2: Synthetic Stream & Drift Simulator
 - [x] Epic 3: Drift Detection Engine (ADWIN)
-- [ ] Epic 4: Visualization Dashboard
-- [ ] Epic 5: Storage & Integration
+- [x] Epic 4: Visualization Dashboard
+- [x] Epic 5: Storage & Integration
 
 See [TODO.md](TODO.md) for planned enhancements and future features.
 

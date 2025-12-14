@@ -1,0 +1,101 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://drift-detector/schemas/config_v1.json",
+  "title": "Drift Simulation Configuration",
+  "description": "Schema for drift simulation configuration files",
+  "type": "object",
+  "required": ["simulation", "drift_phases"],
+  "properties": {
+    "simulation": {
+      "type": "object",
+      "required": ["request_rate", "total_requests", "window_size"],
+      "properties": {
+        "request_rate": {
+          "type": "integer",
+          "description": "Requests per second",
+          "minimum": 1,
+          "maximum": 1000
+        },
+        "total_requests": {
+          "type": "integer",
+          "description": "Total number of requests to generate",
+          "minimum": 1
+        },
+        "window_size": {
+          "type": "integer",
+          "description": "Number of predictions per window",
+          "minimum": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "drift_phases": {
+      "type": "array",
+      "description": "List of drift phases in the simulation",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["phase_id", "name", "num_requests", "is_drift", "drift_type", "distribution"],
+        "properties": {
+          "phase_id": {
+            "type": "integer",
+            "description": "Unique phase identifier",
+            "minimum": 1
+          },
+          "name": {
+            "type": "string",
+            "description": "Human-readable phase name"
+          },
+          "num_requests": {
+            "type": "integer",
+            "description": "Number of requests in this phase",
+            "minimum": 1
+          },
+          "is_drift": {
+            "type": "boolean",
+            "description": "Whether this phase contains drift"
+          },
+          "drift_type": {
+            "type": "string",
+            "enum": ["none", "gradual", "abrupt"],
+            "description": "Type of drift in this phase"
+          },
+          "distribution": {
+            "type": "object",
+            "description": "Feature distributions for this phase",
+            "required": ["feature1", "feature2", "feature3"],
+            "properties": {
+              "feature1": {
+                "type": "object",
+                "required": ["mean", "std"],
+                "properties": {
+                  "mean": {"type": "number"},
+                  "std": {"type": "number", "minimum": 0}
+                }
+              },
+              "feature2": {
+                "type": "object",
+                "required": ["mean", "std"],
+                "properties": {
+                  "mean": {"type": "number"},
+                  "std": {"type": "number", "minimum": 0}
+                }
+              },
+              "feature3": {
+                "type": "object",
+                "required": ["mean", "std"],
+                "properties": {
+                  "mean": {"type": "number"},
+                  "std": {"type": "number", "minimum": 0}
+                }
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

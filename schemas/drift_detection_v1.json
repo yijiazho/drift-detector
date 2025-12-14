@@ -1,0 +1,56 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://drift-detector/schemas/drift_detection_v1.json",
+  "title": "Drift Detection Result",
+  "description": "Schema for drift detection results per window",
+  "type": "object",
+  "required": ["window_id", "timestamp", "drift_statistic", "drift_detected", "adwin_detected", "baseline_mean", "current_mean", "current_std", "predictions_processed"],
+  "properties": {
+    "window_id": {
+      "type": "integer",
+      "description": "Window identifier",
+      "minimum": 0
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp when detection was performed"
+    },
+    "drift_statistic": {
+      "type": "number",
+      "description": "Magnitude of drift (mean difference from baseline)",
+      "minimum": 0
+    },
+    "drift_detected": {
+      "type": "boolean",
+      "description": "Whether drift was detected (by any method)"
+    },
+    "adwin_detected": {
+      "type": "boolean",
+      "description": "Whether ADWIN algorithm detected drift"
+    },
+    "baseline_mean": {
+      "type": "number",
+      "description": "Baseline prediction mean"
+    },
+    "current_mean": {
+      "type": "number",
+      "description": "Current window prediction mean"
+    },
+    "current_std": {
+      "type": "number",
+      "description": "Current window prediction standard deviation",
+      "minimum": 0
+    },
+    "predictions_processed": {
+      "type": "integer",
+      "description": "Number of predictions processed in this window",
+      "minimum": 1
+    },
+    "ground_truth_drift": {
+      "type": "boolean",
+      "description": "Ground truth drift label (optional, for validation)"
+    }
+  },
+  "additionalProperties": false
+}
