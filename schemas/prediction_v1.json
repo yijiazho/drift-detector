@@ -1,0 +1,43 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://drift-detector/schemas/prediction_v1.json",
+  "title": "Prediction Log Entry",
+  "description": "Schema for individual prediction log entries",
+  "type": "object",
+  "required": ["timestamp", "input_features", "prediction", "model_version"],
+  "properties": {
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp when prediction was made"
+    },
+    "input_features": {
+      "type": "object",
+      "description": "Input features used for prediction",
+      "required": ["feature1", "feature2", "feature3"],
+      "properties": {
+        "feature1": {"type": "number"},
+        "feature2": {"type": "number"},
+        "feature3": {"type": "number"}
+      },
+      "additionalProperties": false
+    },
+    "prediction": {
+      "type": "number",
+      "description": "Model prediction output",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "model_version": {
+      "type": "string",
+      "description": "Version of the model used",
+      "pattern": "^v\\d+\\.\\d+$"
+    },
+    "drift_phase": {
+      "type": "integer",
+      "description": "Drift phase ID (optional, used in simulations)",
+      "minimum": 1
+    }
+  },
+  "additionalProperties": false
+}

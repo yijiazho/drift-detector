@@ -1,0 +1,44 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://drift-detector/schemas/window_metadata_v1.json",
+  "title": "Window Metadata",
+  "description": "Schema for window metadata entries",
+  "type": "object",
+  "required": ["window_id", "start_timestamp", "end_timestamp", "is_drift", "is_simulated", "number_of_predictions"],
+  "properties": {
+    "window_id": {
+      "type": "integer",
+      "description": "Sequential window identifier",
+      "minimum": 0
+    },
+    "start_timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp of first prediction in window"
+    },
+    "end_timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp of last prediction in window"
+    },
+    "is_drift": {
+      "type": "boolean",
+      "description": "Ground truth: whether this window contains drift"
+    },
+    "is_simulated": {
+      "type": "boolean",
+      "description": "Whether this data is from a simulation"
+    },
+    "number_of_predictions": {
+      "type": "integer",
+      "description": "Number of predictions in this window",
+      "minimum": 1
+    },
+    "drift_phase_id": {
+      "type": "integer",
+      "description": "Associated drift phase identifier (optional)",
+      "minimum": 1
+    }
+  },
+  "additionalProperties": false
+}
