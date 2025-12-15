@@ -1,0 +1,778 @@
+\section{Drift Detection System}\label{drift-detection-system}
+
+A comprehensive machine learning drift detection system with synthetic
+data generation, model serving, and real-time drift monitoring.
+
+\subsection{Overview}\label{overview}
+
+This system implements a complete pipeline for detecting data drift in
+machine learning models:
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{Epic 1}: Local Model Service with prediction logging
+\item
+  \textbf{Epic 2}: Synthetic data generation with configurable drift
+  simulation
+\item
+  \textbf{Epic 3}: ADWIN-based drift detection engine
+\item
+  \textbf{Epic 4}: Streamlit visualization dashboard
+\item
+  \textbf{Epic 5}: Unified storage schemas and integration tests
+\end{itemize}
+
+\subsection{Features}\label{features}
+
+\subsubsection{✅ Epic 1: Local Model
+Service}\label{epic-1-local-model-service}
+
+\begin{itemize}
+\tightlist
+\item
+  FastAPI-based prediction service
+\item
+  Pre-fitted scikit-learn Logistic Regression model
+\item
+  Automatic prediction logging in JSONL format
+\item
+  Health check endpoint
+\item
+  Request/response validation with Pydantic
+\end{itemize}
+
+\subsubsection{✅ Epic 2: Synthetic Stream \& Drift
+Simulator}\label{epic-2-synthetic-stream-drift-simulator}
+
+\begin{itemize}
+\tightlist
+\item
+  Configurable synthetic data generation
+\item
+  Multiple drift phases (baseline, gradual drift, abrupt drift)
+\item
+  Windowing with metadata tracking
+\item
+  Configurable request rates and window sizes
+\item
+  Ground truth drift labels for validation
+\end{itemize}
+
+\subsubsection{✅ Epic 3: Drift Detection
+Engine}\label{epic-3-drift-detection-engine}
+
+\begin{itemize}
+\tightlist
+\item
+  ADWIN (Adaptive Windowing) algorithm from River library
+\item
+  Automatic drift detection on prediction streams
+\item
+  Configurable sensitivity (delta parameter)
+\item
+  Statistical drift metrics (mean difference from baseline)
+\item
+  Ground truth comparison and accuracy metrics
+\item
+  JSON output with detection results per window
+\end{itemize}
+
+\subsubsection{✅ Epic 4: Visualization
+Dashboard}\label{epic-4-visualization-dashboard}
+
+\begin{itemize}
+\tightlist
+\item
+  Interactive Streamlit web application
+\item
+  Feature distribution visualization over time
+\item
+  Drift detection results with ground truth comparison
+\item
+  Time range filtering with window-based navigation
+\item
+  Responsive charts using Plotly
+\item
+  Log file selection and data exploration
+\end{itemize}
+
+\subsubsection{✅ Epic 5: Storage \&
+Integration}\label{epic-5-storage-integration}
+
+\begin{itemize}
+\tightlist
+\item
+  Unified JSON Schema definitions for all data formats
+\item
+  Schema validation with detailed error messages
+\item
+  Data manager with type-safe operations
+\item
+  Comprehensive end-to-end integration tests
+\item
+  Automatic validation of existing data files
+\item
+  Version-aware schema registry
+\end{itemize}
+
+\subsection{Quick Start}\label{quick-start}
+
+\subsubsection{1. Setup}\label{setup}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Create and activate virtual environment}
+\ExtensionTok{python3} \AttributeTok{{-}m}\NormalTok{ venv venv}
+\BuiltInTok{source}\NormalTok{ venv/bin/activate}
+
+\CommentTok{\# Install dependencies}
+\ExtensionTok{pip}\NormalTok{ install }\AttributeTok{{-}r}\NormalTok{ requirements.txt}
+
+\CommentTok{\# Create the pre{-}fitted model}
+\ExtensionTok{python}\NormalTok{ create\_model.py}
+\end{Highlighting}
+\end{Shaded}
+
+\subsubsection{2. Start the Model
+Service}\label{start-the-model-service}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Terminal 1: Start the FastAPI service}
+\BuiltInTok{source}\NormalTok{ venv/bin/activate}
+\ExtensionTok{python}\NormalTok{ src/model\_service.py}
+\end{Highlighting}
+\end{Shaded}
+
+The service will be available at \texttt{http://localhost:8000}
+
+\subsubsection{3. Run Drift Simulation}\label{run-drift-simulation}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Terminal 2: Run the drift simulator}
+\BuiltInTok{source}\NormalTok{ venv/bin/activate}
+\ExtensionTok{python}\NormalTok{ src/drift\_simulator.py }\AttributeTok{{-}{-}config}\NormalTok{ configs/config\_simple.json}
+\end{Highlighting}
+\end{Shaded}
+
+\subsubsection{4. Detect Drift}\label{detect-drift}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Terminal 3: Run drift detection}
+\BuiltInTok{source}\NormalTok{ venv/bin/activate}
+\ExtensionTok{python}\NormalTok{ src/drift\_detector.py}
+\end{Highlighting}
+\end{Shaded}
+
+\subsubsection{5. Analyze Results}\label{analyze-results}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# View drift statistics}
+\ExtensionTok{python}\NormalTok{ analyze\_drift.py }\AttributeTok{{-}{-}log{-}file}\NormalTok{ logs/predictions\_YYYYMMDD.jsonl}
+\end{Highlighting}
+\end{Shaded}
+
+\subsubsection{6. Launch Dashboard}\label{launch-dashboard}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Start the interactive dashboard}
+\ExtensionTok{streamlit}\NormalTok{ run dashboard.py}
+\end{Highlighting}
+\end{Shaded}
+
+The dashboard will open in your browser at
+\texttt{http://localhost:8501}
+
+\subsubsection{7. Validate Data (Epic 5)}\label{validate-data-epic-5}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Quick validation {-} verify all data and run tests}
+\ExtensionTok{python}\NormalTok{ validate\_epic5.py}
+
+\CommentTok{\# Or run individually:}
+\ExtensionTok{python}\NormalTok{ src/data\_manager.py           }\CommentTok{\# Validate existing data files}
+\ExtensionTok{python}\NormalTok{ tests/test\_integration.py     }\CommentTok{\# Run integration tests}
+\end{Highlighting}
+\end{Shaded}
+
+\subsection{Project Structure}\label{project-structure}
+
+\begin{verbatim}
+drift-detector/
+├── src/
+│   ├── model_service.py          # FastAPI prediction service
+│   ├── drift_simulator.py        # Drift simulation engine
+│   ├── drift_detector.py         # ADWIN drift detection engine
+│   └── data_manager.py           # Unified data operations (Epic 5)
+├── schemas/                       # JSON Schema definitions (Epic 5)
+│   ├── prediction_v1.json        # Prediction schema
+│   ├── window_metadata_v1.json   # Window metadata schema
+│   ├── drift_detection_v1.json   # Drift detection schema
+│   ├── config_v1.json            # Configuration schema
+│   └── schema_registry.py        # Schema validation utilities
+├── tests/                         # Integration tests (Epic 5)
+│   ├── __init__.py
+│   └── test_integration.py       # End-to-end test suite
+├── configs/
+│   ├── config_simple.json        # Simple drift scenario
+│   └── config_multiple_drifts.json  # Complex multi-phase scenario
+├── models/
+│   ├── model_v1.0.pkl            # Pre-fitted model
+│   └── model_metadata.pkl        # Model metadata
+├── logs/
+│   └── predictions_*.jsonl       # Prediction logs
+├── outputs/
+│   ├── metadata/
+│   │   └── window_metadata.json  # Window metadata with drift labels
+│   └── detection/
+│       └── drift_detection.json  # Drift detection results
+├── dashboard.py                  # Streamlit visualization dashboard
+├── create_model.py               # Model creation script
+├── test_service.py               # Epic 1 test suite
+├── analyze_drift.py              # Drift analysis tool
+├── EPIC5_IMPLEMENTATION.md       # Epic 5 documentation
+├── TODO.md                       # Future enhancements
+└── requirements.txt              # Python dependencies
+\end{verbatim}
+
+\subsection{Usage Guide}\label{usage-guide}
+
+\subsubsection{Testing the Model Service (Epic
+1)}\label{testing-the-model-service-epic-1}
+
+Run the comprehensive test suite:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\BuiltInTok{source}\NormalTok{ venv/bin/activate}
+\ExtensionTok{python}\NormalTok{ test\_service.py}
+\end{Highlighting}
+\end{Shaded}
+
+This tests: - Health check endpoint - Prediction endpoint - Multiple
+predictions - Prediction logging
+
+\subsubsection{Manual API Testing}\label{manual-api-testing}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Health check}
+\ExtensionTok{curl}\NormalTok{ http://localhost:8000/}
+
+\CommentTok{\# Make a prediction}
+\ExtensionTok{curl} \AttributeTok{{-}X}\NormalTok{ POST http://localhost:8000/predict }\DataTypeTok{\textbackslash{}}
+  \AttributeTok{{-}H} \StringTok{"Content{-}Type: application/json"} \DataTypeTok{\textbackslash{}}
+  \AttributeTok{{-}d} \StringTok{\textquotesingle{}\{}
+\StringTok{    "features": \{}
+\StringTok{      "feature1": 3.5,}
+\StringTok{      "feature2": 1.2,}
+\StringTok{      "feature3": 0.8}
+\StringTok{    \}}
+\StringTok{  \}\textquotesingle{}}
+\end{Highlighting}
+\end{Shaded}
+
+\textbf{Response:}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{\{}
+  \DataTypeTok{"prediction"}\FunctionTok{:} \FloatTok{0.016}\FunctionTok{,}
+  \DataTypeTok{"model\_version"}\FunctionTok{:} \StringTok{"v1.0"}\FunctionTok{,}
+  \DataTypeTok{"timestamp"}\FunctionTok{:} \StringTok{"2025{-}12{-}07T00:28:48.938254Z"}
+\FunctionTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+\subsubsection{Configuring Drift
+Scenarios}\label{configuring-drift-scenarios}
+
+Create or modify JSON configuration files:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{\{}
+  \DataTypeTok{"simulation"}\FunctionTok{:} \FunctionTok{\{}
+    \DataTypeTok{"request\_rate"}\FunctionTok{:} \DecValTok{20}\FunctionTok{,}           \ErrorTok{//} \ErrorTok{Requests} \ErrorTok{per} \ErrorTok{second}
+    \DataTypeTok{"total\_requests"}\FunctionTok{:} \DecValTok{400}\FunctionTok{,}        \ErrorTok{//} \ErrorTok{Total} \ErrorTok{number} \ErrorTok{of} \ErrorTok{requests}
+    \DataTypeTok{"window\_size"}\FunctionTok{:} \DecValTok{100}            \ErrorTok{//} \ErrorTok{Predictions} \ErrorTok{per} \ErrorTok{window}
+  \FunctionTok{\},}
+  \DataTypeTok{"drift\_phases"}\FunctionTok{:} \OtherTok{[}
+    \FunctionTok{\{}
+      \DataTypeTok{"phase\_id"}\FunctionTok{:} \DecValTok{1}\FunctionTok{,}
+      \DataTypeTok{"name"}\FunctionTok{:} \StringTok{"baseline"}\FunctionTok{,}
+      \DataTypeTok{"num\_requests"}\FunctionTok{:} \DecValTok{200}\FunctionTok{,}
+      \DataTypeTok{"is\_drift"}\FunctionTok{:} \KeywordTok{false}\FunctionTok{,}
+      \DataTypeTok{"drift\_type"}\FunctionTok{:} \StringTok{"none"}\FunctionTok{,}
+      \DataTypeTok{"distribution"}\FunctionTok{:} \FunctionTok{\{}
+        \DataTypeTok{"feature1"}\FunctionTok{:} \FunctionTok{\{}\DataTypeTok{"mean"}\FunctionTok{:} \FloatTok{5.0}\FunctionTok{,} \DataTypeTok{"std"}\FunctionTok{:} \FloatTok{1.0}\FunctionTok{\},}
+        \DataTypeTok{"feature2"}\FunctionTok{:} \FunctionTok{\{}\DataTypeTok{"mean"}\FunctionTok{:} \FloatTok{2.0}\FunctionTok{,} \DataTypeTok{"std"}\FunctionTok{:} \FloatTok{0.5}\FunctionTok{\},}
+        \DataTypeTok{"feature3"}\FunctionTok{:} \FunctionTok{\{}\DataTypeTok{"mean"}\FunctionTok{:} \FloatTok{1.3}\FunctionTok{,} \DataTypeTok{"std"}\FunctionTok{:} \FloatTok{0.3}\FunctionTok{\}}
+      \FunctionTok{\}}
+    \FunctionTok{\}}\OtherTok{,}
+    \FunctionTok{\{}
+      \DataTypeTok{"phase\_id"}\FunctionTok{:} \DecValTok{2}\FunctionTok{,}
+      \DataTypeTok{"name"}\FunctionTok{:} \StringTok{"abrupt\_drift"}\FunctionTok{,}
+      \DataTypeTok{"num\_requests"}\FunctionTok{:} \DecValTok{200}\FunctionTok{,}
+      \DataTypeTok{"is\_drift"}\FunctionTok{:} \KeywordTok{true}\FunctionTok{,}
+      \DataTypeTok{"drift\_type"}\FunctionTok{:} \StringTok{"abrupt"}\FunctionTok{,}
+      \DataTypeTok{"distribution"}\FunctionTok{:} \FunctionTok{\{}
+        \DataTypeTok{"feature1"}\FunctionTok{:} \FunctionTok{\{}\DataTypeTok{"mean"}\FunctionTok{:} \FloatTok{8.0}\FunctionTok{,} \DataTypeTok{"std"}\FunctionTok{:} \FloatTok{1.5}\FunctionTok{\},}
+        \DataTypeTok{"feature2"}\FunctionTok{:} \FunctionTok{\{}\DataTypeTok{"mean"}\FunctionTok{:} \FloatTok{3.0}\FunctionTok{,} \DataTypeTok{"std"}\FunctionTok{:} \FloatTok{0.8}\FunctionTok{\},}
+        \DataTypeTok{"feature3"}\FunctionTok{:} \FunctionTok{\{}\DataTypeTok{"mean"}\FunctionTok{:} \FloatTok{2.2}\FunctionTok{,} \DataTypeTok{"std"}\FunctionTok{:} \FloatTok{0.5}\FunctionTok{\}}
+      \FunctionTok{\}}
+    \FunctionTok{\}}
+  \OtherTok{]}
+\FunctionTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+\subsubsection{Running Different
+Scenarios}\label{running-different-scenarios}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Simple scenario: baseline → abrupt drift}
+\ExtensionTok{python}\NormalTok{ src/drift\_simulator.py }\AttributeTok{{-}{-}config}\NormalTok{ configs/config\_simple.json}
+
+\CommentTok{\# Complex scenario: baseline → gradual → abrupt drift}
+\ExtensionTok{python}\NormalTok{ src/drift\_simulator.py }\AttributeTok{{-}{-}config}\NormalTok{ configs/config\_multiple\_drifts.json}
+
+\CommentTok{\# Custom output and endpoint}
+\ExtensionTok{python}\NormalTok{ src/drift\_simulator.py }\DataTypeTok{\textbackslash{}}
+  \AttributeTok{{-}{-}config}\NormalTok{ configs/config\_simple.json }\DataTypeTok{\textbackslash{}}
+  \AttributeTok{{-}{-}output}\NormalTok{ outputs/metadata/my\_run.json }\DataTypeTok{\textbackslash{}}
+  \AttributeTok{{-}{-}url}\NormalTok{ http://localhost:8000/predict}
+\end{Highlighting}
+\end{Shaded}
+
+\subsubsection{Detecting Drift (Epic 3)}\label{detecting-drift-epic-3}
+
+After running a simulation, detect drift using ADWIN:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Basic usage (uses today\textquotesingle{}s log file automatically)}
+\ExtensionTok{python}\NormalTok{ src/drift\_detector.py}
+
+\CommentTok{\# Specify log file and parameters}
+\ExtensionTok{python}\NormalTok{ src/drift\_detector.py }\DataTypeTok{\textbackslash{}}
+  \AttributeTok{{-}{-}log{-}file}\NormalTok{ logs/predictions\_20251208.jsonl }\DataTypeTok{\textbackslash{}}
+  \AttributeTok{{-}{-}metadata}\NormalTok{ outputs/metadata/window\_metadata.json }\DataTypeTok{\textbackslash{}}
+  \AttributeTok{{-}{-}window{-}size}\NormalTok{ 100 }\DataTypeTok{\textbackslash{}}
+  \AttributeTok{{-}{-}delta}\NormalTok{ 0.002 }\DataTypeTok{\textbackslash{}}
+  \AttributeTok{{-}{-}output}\NormalTok{ outputs/detection/drift\_detection.json}
+
+\CommentTok{\# More sensitive detection (lower delta)}
+\ExtensionTok{python}\NormalTok{ src/drift\_detector.py }\AttributeTok{{-}{-}delta}\NormalTok{ 0.001}
+
+\CommentTok{\# Less sensitive detection (higher delta)}
+\ExtensionTok{python}\NormalTok{ src/drift\_detector.py }\AttributeTok{{-}{-}delta}\NormalTok{ 0.01}
+\end{Highlighting}
+\end{Shaded}
+
+\textbf{Parameters:} - \texttt{-\/-log-file}: Path to predictions JSONL
+file (default: today's date) - \texttt{-\/-metadata}: Path to window
+metadata (default: outputs/metadata/window\_metadata.json) -
+\texttt{-\/-window-size}: Predictions per window (default: 100) -
+\texttt{-\/-delta}: ADWIN sensitivity (default: 0.002) - Lower = more
+sensitive (more detections) - Higher = less sensitive (fewer false
+positives) - \texttt{-\/-output}: Output file for detection results
+(default: outputs/detection/drift\_detection.json)
+
+\begin{verbatim}
+
+### Visualization Dashboard (Epic 4)
+
+Launch the interactive dashboard to visualize drift detection results:
+
+```bash
+streamlit run dashboard.py
+\end{verbatim}
+
+\textbf{Dashboard Features:} - \textbf{Feature Selection}: Choose which
+feature to visualize from dropdown - \textbf{Time Series Plot}: View
+feature values over time with drift markers - \textbf{Distribution
+Histogram}: See feature value distribution - \textbf{Drift Detection
+Chart}: Visualize drift statistics with detection points -
+\textbf{Ground Truth Comparison}: Compare detected drift vs actual drift
+(if available) - \textbf{Time Range Filtering}: Use slider to filter by
+window range - \textbf{Log File Selection}: Switch between different
+prediction log files
+
+\textbf{Tips:} - The dashboard automatically loads the latest log file -
+Use the window range slider to zoom into specific time periods - Hover
+over charts for detailed information - Red vertical lines indicate
+detected drift points - Green/red markers show true/false positives in
+detection
+
+\subsubsection{Schema Validation \& Integration Tests (Epic
+5)}\label{schema-validation-integration-tests-epic-5}
+
+Validate data integrity and run end-to-end tests:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Validate all existing data files}
+\ExtensionTok{python}\NormalTok{ src/data\_manager.py}
+
+\CommentTok{\# Run comprehensive integration tests}
+\ExtensionTok{python}\NormalTok{ tests/test\_integration.py}
+\end{Highlighting}
+\end{Shaded}
+
+\textbf{Validation Output:}
+
+\begin{verbatim}
+✓ predictions_20251210.jsonl
+✓ window_metadata.json
+✓ drift_detection.json
+✓ config_simple.json
+Summary: 6/6 files passed validation
+\end{verbatim}
+
+\textbf{Integration Tests:} - Configuration validation - Model service
+health check - Prediction log validation - Window metadata validation -
+Drift detection validation - Data consistency checks - Ground truth
+comparison - Schema error handling
+
+\textbf{Using the Data Manager in Code:}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\ImportTok{from}\NormalTok{ src.data\_manager }\ImportTok{import}\NormalTok{ DataManager}
+\ImportTok{from}\NormalTok{ pathlib }\ImportTok{import}\NormalTok{ Path}
+
+\CommentTok{\# Initialize with validation}
+\NormalTok{dm }\OperatorTok{=}\NormalTok{ DataManager(validate}\OperatorTok{=}\VariableTok{True}\NormalTok{)}
+
+\CommentTok{\# Read data with automatic validation}
+\NormalTok{config }\OperatorTok{=}\NormalTok{ dm.read\_config(Path(}\StringTok{\textquotesingle{}configs/config\_simple.json\textquotesingle{}}\NormalTok{))}
+\NormalTok{predictions }\OperatorTok{=}\NormalTok{ dm.read\_predictions(Path(}\StringTok{\textquotesingle{}logs/predictions\_20251210.jsonl\textquotesingle{}}\NormalTok{))}
+\NormalTok{windows }\OperatorTok{=}\NormalTok{ dm.read\_window\_metadata(Path(}\StringTok{\textquotesingle{}outputs/metadata/window\_metadata.json\textquotesingle{}}\NormalTok{))}
+\NormalTok{detections }\OperatorTok{=}\NormalTok{ dm.read\_drift\_detections(Path(}\StringTok{\textquotesingle{}outputs/detection/drift\_detection.json\textquotesingle{}}\NormalTok{))}
+
+\CommentTok{\# Write data with validation}
+\NormalTok{dm.write\_window\_metadata(output\_file, windows\_list)}
+\NormalTok{dm.write\_drift\_detections(output\_file, detections\_list)}
+\end{Highlighting}
+\end{Shaded}
+
+For detailed Epic 5 documentation, see \url{EPIC5_IMPLEMENTATION.md}
+
+\subsection{Data Formats}\label{data-formats}
+
+\subsubsection{Prediction Log Format}\label{prediction-log-format}
+
+Stored in \texttt{logs/predictions\_YYYYMMDD.jsonl}:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{\{}
+  \DataTypeTok{"timestamp"}\FunctionTok{:} \StringTok{"2025{-}12{-}07T22:39:51.932594Z"}\FunctionTok{,}
+  \DataTypeTok{"input\_features"}\FunctionTok{:} \FunctionTok{\{}
+    \DataTypeTok{"feature1"}\FunctionTok{:} \FloatTok{5.23}\FunctionTok{,}
+    \DataTypeTok{"feature2"}\FunctionTok{:} \FloatTok{1.98}\FunctionTok{,}
+    \DataTypeTok{"feature3"}\FunctionTok{:} \FloatTok{1.25}
+  \FunctionTok{\},}
+  \DataTypeTok{"prediction"}\FunctionTok{:} \FloatTok{0.0788}\FunctionTok{,}
+  \DataTypeTok{"model\_version"}\FunctionTok{:} \StringTok{"v1.0"}\FunctionTok{,}
+  \DataTypeTok{"drift\_phase"}\FunctionTok{:} \DecValTok{1}
+\FunctionTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+\subsubsection{Window Metadata Format}\label{window-metadata-format}
+
+Stored in \texttt{outputs/metadata/window\_metadata.json}:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{\{}
+  \DataTypeTok{"window\_id"}\FunctionTok{:} \DecValTok{0}\FunctionTok{,}
+  \DataTypeTok{"start\_timestamp"}\FunctionTok{:} \StringTok{"2025{-}12{-}07T22:39:51.932594Z"}\FunctionTok{,}
+  \DataTypeTok{"end\_timestamp"}\FunctionTok{:} \StringTok{"2025{-}12{-}07T22:39:57.739748Z"}\FunctionTok{,}
+  \DataTypeTok{"is\_drift"}\FunctionTok{:} \KeywordTok{false}\FunctionTok{,}
+  \DataTypeTok{"is\_simulated"}\FunctionTok{:} \KeywordTok{true}\FunctionTok{,}
+  \DataTypeTok{"number\_of\_predictions"}\FunctionTok{:} \DecValTok{100}
+\FunctionTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+\subsubsection{Drift Detection Output
+Format}\label{drift-detection-output-format}
+
+Stored in \texttt{outputs/detection/drift\_detection.json}:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{\{}
+  \DataTypeTok{"window\_id"}\FunctionTok{:} \DecValTok{2}\FunctionTok{,}
+  \DataTypeTok{"timestamp"}\FunctionTok{:} \StringTok{"2025{-}12{-}08T00:30:39.573019Z"}\FunctionTok{,}
+  \DataTypeTok{"drift\_statistic"}\FunctionTok{:} \FloatTok{0.429292}\FunctionTok{,}
+  \DataTypeTok{"drift\_detected"}\FunctionTok{:} \KeywordTok{true}\FunctionTok{,}
+  \DataTypeTok{"adwin\_detected"}\FunctionTok{:} \KeywordTok{true}\FunctionTok{,}
+  \DataTypeTok{"baseline\_mean"}\FunctionTok{:} \FloatTok{0.071059}\FunctionTok{,}
+  \DataTypeTok{"current\_mean"}\FunctionTok{:} \FloatTok{0.50035}\FunctionTok{,}
+  \DataTypeTok{"current\_std"}\FunctionTok{:} \FloatTok{0.320717}\FunctionTok{,}
+  \DataTypeTok{"predictions\_processed"}\FunctionTok{:} \DecValTok{100}\FunctionTok{,}
+  \DataTypeTok{"ground\_truth\_drift"}\FunctionTok{:} \KeywordTok{true}
+\FunctionTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+\subsection{Example Results}\label{example-results}
+
+\subsubsection{Simulation Output}\label{simulation-output}
+
+\begin{verbatim}
+============================================================
+Drift Simulator - Epic 2
+============================================================
+Configuration:
+  Request rate: 20 req/s
+  Total requests: 400
+  Window size: 100
+  Drift phases: 2
+
+✓ Model service is running: v1.0
+
+→ Starting Phase 1: baseline (drift=False)
+  ✓ Window 0 completed: 100 predictions, drift=False
+  ✓ Window 1 completed: 100 predictions, drift=False
+
+→ Entering Phase 2: abrupt_drift (drift=True)
+  ✓ Window 2 completed: 100 predictions, drift=True
+  ✓ Window 3 completed: 100 predictions, drift=True
+
+============================================================
+Simulation Complete
+============================================================
+Total requests sent: 400/400
+Success rate: 100.0%
+Total windows: 4
+\end{verbatim}
+
+\subsubsection{Drift Analysis}\label{drift-analysis}
+
+\begin{verbatim}
+Window 0 (drift=False):
+  Mean:  0.0788  ← Baseline
+  Std:   0.0855
+
+Window 1 (drift=False):
+  Mean:  0.0771  ← Baseline
+  Std:   0.0670
+
+Window 2 (drift=True):
+  Mean:  0.4932  ← Drift detected! (6.5x increase)
+  Std:   0.2753
+
+Window 3 (drift=True):
+  Mean:  0.5390  ← Drift continues
+  Std:   0.2973
+\end{verbatim}
+
+The prediction mean shifts from \textbf{\textasciitilde0.078} to
+\textbf{\textasciitilde0.52}, demonstrating clear, detectable drift.
+
+\subsubsection{Drift Detection Output}\label{drift-detection-output}
+
+\begin{verbatim}
+======================================================================
+Drift Detection Engine - Epic 3
+======================================================================
+Configuration:
+  Window size: 100
+  ADWIN delta: 0.002
+  Total predictions: 400
+
+Processing windows...
+  Window  0: STABLE | stat=0.0000 | mean=0.0711 | Ground truth: STABLE ✓
+  Window  1: STABLE | stat=0.0112 | mean=0.0823 | Ground truth: STABLE ✓
+  Window  2: DRIFT  | stat=0.4293 | mean=0.5003 | Ground truth: DRIFT ✓
+  Window  3: STABLE | stat=0.4830 | mean=0.5541 | Ground truth: DRIFT ✗
+
+======================================================================
+Detection Summary
+======================================================================
+Total windows: 4
+Drift detected: 1
+Stable: 3
+
+Ground Truth Comparison:
+  Accuracy: 75.0% (3/4)
+  True Positives:  1
+  False Positives: 0
+  True Negatives:  2
+  False Negatives: 1
+  Precision: 1.00
+  Recall: 0.50
+\end{verbatim}
+
+\textbf{Interpretation:} - ADWIN detected drift in window 2 (first drift
+window) ✓ - Window 3 marked as stable because ADWIN already adapted to
+the new distribution - This is expected behavior: ADWIN detects the
+\emph{change}, not the ongoing \emph{state} - Perfect precision (no
+false positives) - 50\% recall (missed detecting continuation in window
+3)
+
+\subsection{Development}\label{development}
+
+\subsubsection{Adding New Features}\label{adding-new-features}
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  Model service endpoints: Edit \texttt{src/model\_service.py}
+\item
+  Drift simulation logic: Edit \texttt{src/drift\_simulator.py}
+\item
+  Configuration schemas: Create new JSON config files
+\end{enumerate}
+
+\subsubsection{Testing}\label{testing}
+
+\textbf{Comprehensive Test Plan}: 143+ test cases across all epics
+documented in \texttt{TEST\_PLAN.md}
+
+\textbf{Current Tests}:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Epic 1: Model Service Tests}
+\ExtensionTok{python}\NormalTok{ test\_service.py}
+
+\CommentTok{\# Epic 5: Integration Tests}
+\ExtensionTok{python}\NormalTok{ tests/test\_integration.py}
+
+\CommentTok{\# Run all tests with pytest}
+\ExtensionTok{pytest}\NormalTok{ tests/ }\AttributeTok{{-}v}
+
+\CommentTok{\# With coverage report}
+\ExtensionTok{pytest} \AttributeTok{{-}{-}cov}\OperatorTok{=}\NormalTok{src }\AttributeTok{{-}{-}cov{-}report}\OperatorTok{=}\NormalTok{html}
+\end{Highlighting}
+\end{Shaded}
+
+\textbf{Test Coverage}: - ✅ Epic 1: Basic model service tests (4 tests)
+- ✅ Epic 5: Integration tests (11 tests) - ○ Full test suite: 143+
+tests documented, ready to implement
+
+\textbf{Install Test Dependencies}:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\ExtensionTok{pip}\NormalTok{ install pytest pytest{-}cov pytest{-}mock pytest{-}asyncio httpx}
+\end{Highlighting}
+\end{Shaded}
+
+See \url{TEST_PLAN.md} for complete test specifications and
+\url{TEST_PLAN_SUMMARY.md} for implementation guide.
+
+\subsubsection{Viewing Logs}\label{viewing-logs}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Latest predictions}
+\FunctionTok{tail} \AttributeTok{{-}f}\NormalTok{ logs/predictions\_}\PreprocessorTok{*}\NormalTok{.jsonl}
+
+\CommentTok{\# Window metadata}
+\FunctionTok{cat}\NormalTok{ outputs/metadata/window\_metadata.json }\KeywordTok{|} \ExtensionTok{python} \AttributeTok{{-}m}\NormalTok{ json.tool}
+
+\CommentTok{\# Drift detection results}
+\FunctionTok{cat}\NormalTok{ outputs/detection/drift\_detection.json }\KeywordTok{|} \ExtensionTok{python} \AttributeTok{{-}m}\NormalTok{ json.tool}
+\end{Highlighting}
+\end{Shaded}
+
+\subsection{Dependencies}\label{dependencies}
+
+\begin{itemize}
+\tightlist
+\item
+  \texttt{fastapi==0.104.1} - Web framework
+\item
+  \texttt{uvicorn==0.24.0} - ASGI server
+\item
+  \texttt{scikit-learn==1.3.2} - ML model
+\item
+  \texttt{numpy==1.26.2} - Numerical computing
+\item
+  \texttt{pydantic==2.5.0} - Data validation
+\item
+  \texttt{river==0.21.0} - Streaming ML algorithms (ADWIN)
+\item
+  \texttt{streamlit==1.29.0} - Dashboard framework
+\item
+  \texttt{plotly==5.18.0} - Interactive visualizations
+\item
+  \texttt{jsonschema==4.20.0} - JSON Schema validation (Epic 5)
+\item
+  \texttt{requests} - HTTP client (for testing)
+\end{itemize}
+
+\subsection{API Reference}\label{api-reference}
+
+\subsubsection{Health Check}\label{health-check}
+
+\textbf{GET} \texttt{/}
+
+Returns service status and model version.
+
+\subsubsection{Predict}\label{predict}
+
+\textbf{POST} \texttt{/predict}
+
+\textbf{Request:}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{\{}
+  \DataTypeTok{"features"}\FunctionTok{:} \FunctionTok{\{}
+    \DataTypeTok{"feature1"}\FunctionTok{:} \FloatTok{3.5}\FunctionTok{,}
+    \DataTypeTok{"feature2"}\FunctionTok{:} \FloatTok{1.2}\FunctionTok{,}
+    \DataTypeTok{"feature3"}\FunctionTok{:} \FloatTok{0.8}
+  \FunctionTok{\}}
+\FunctionTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+\textbf{Response:}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{\{}
+  \DataTypeTok{"prediction"}\FunctionTok{:} \FloatTok{0.5}\FunctionTok{,}
+  \DataTypeTok{"model\_version"}\FunctionTok{:} \StringTok{"v1.0"}\FunctionTok{,}
+  \DataTypeTok{"timestamp"}\FunctionTok{:} \StringTok{"2025{-}11{-}21T10:00:00Z"}
+\FunctionTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+\subsection{Roadmap}\label{roadmap}
+
+\begin{itemize}
+\tightlist
+\item[$\boxtimes$]
+  Epic 1: Local Model Service
+\item[$\boxtimes$]
+  Epic 2: Synthetic Stream \& Drift Simulator
+\item[$\boxtimes$]
+  Epic 3: Drift Detection Engine (ADWIN)
+\item[$\boxtimes$]
+  Epic 4: Visualization Dashboard
+\item[$\boxtimes$]
+  Epic 5: Storage \& Integration
+\end{itemize}
+
+See \url{TODO.md} for planned enhancements and future features.
+
+\subsection{License}\label{license}
+
+See LICENSE file for details.
