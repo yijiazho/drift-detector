@@ -57,6 +57,15 @@ This system implements a complete pipeline for detecting data drift in machine l
 - Automatic validation of existing data files
 - Version-aware schema registry
 
+### ✅ Real-Time Drift Analyzer
+
+- Live drift detection using file tailing (no batch processing)
+- Monitors prediction logs in real-time
+- Immediate alerts when drift is detected
+- Configurable sliding window and sensitivity
+- Zero infrastructure requirements (no message queues)
+- Graceful shutdown with summary statistics
+
 ## Quick Start
 
 ### 1. Setup
@@ -106,7 +115,16 @@ python src/drift_detector.py
 python analyze_drift.py --log-file logs/predictions_YYYYMMDD.jsonl
 ```
 
-### 6. Launch Dashboard
+### 6. Real-Time Drift Monitoring (NEW!)
+
+```bash
+# Terminal 4: Start real-time drift analyzer
+python realtime_drift_analyzer.py --auto
+```
+
+This monitors predictions in real-time and alerts immediately when drift is detected!
+
+### 7. Launch Dashboard
 
 ```bash
 # Start the interactive dashboard
@@ -115,7 +133,7 @@ streamlit run dashboard.py
 
 The dashboard will open in your browser at `http://localhost:8501`
 
-### 7. Validate Data (Epic 5)
+### 8. Validate Data (Epic 5)
 
 ```bash
 # Quick validation - verify all data and run tests
@@ -159,12 +177,35 @@ drift-detector/
 │       └── drift_detection.json  # Drift detection results
 ├── dashboard.py                  # Streamlit visualization dashboard
 ├── create_model.py               # Model creation script
-├── test_service.py               # Epic 1 test suite
-├── analyze_drift.py              # Drift analysis tool
+├── analyze_drift.py              # Drift analysis tool (batch)
+├── realtime_drift_analyzer.py    # Real-time drift monitor (NEW!)
+├── test_realtime.py              # Real-time analyzer test script
+├── guides/                       # User guides for all use cases
+│   ├── README.md                # Guide index and navigation
+│   ├── 01_creating_model.md
+│   ├── 02_model_service.md
+│   ├── 03_predictions.md
+│   ├── 04_drift_simulation.md
+│   ├── 05_batch_detection.md
+│   ├── 06_realtime_detection.md
+│   └── 07_dashboard.md
 ├── EPIC5_IMPLEMENTATION.md       # Epic 5 documentation
+├── REALTIME_ANALYZER_GUIDE.md    # Real-time analyzer comprehensive guide
 ├── TODO.md                       # Future enhancements
 └── requirements.txt              # Python dependencies
 ```
+
+## User Guides
+
+For detailed step-by-step instructions, see the **[guides/](guides/)** directory:
+
+- **[Creating the Model](guides/01_creating_model.md)** - Generate the pre-fitted model
+- **[Model Service](guides/02_model_service.md)** - Start and configure the FastAPI service
+- **[Making Predictions](guides/03_predictions.md)** - Send predictions to the model
+- **[Drift Simulation](guides/04_drift_simulation.md)** - Generate synthetic drift data
+- **[Batch Detection](guides/05_batch_detection.md)** - Analyze logs for drift offline
+- **[Real-Time Detection](guides/06_realtime_detection.md)** - Monitor drift in real-time
+- **[Visualization Dashboard](guides/07_dashboard.md)** - Explore results interactively
 
 ## Usage Guide
 
@@ -298,6 +339,58 @@ python src/drift_detector.py --delta 0.01
   - Higher = less sensitive (fewer false positives)
 - `--output`: Output file for detection results (default: outputs/detection/drift_detection.json)
 ```
+
+### Real-Time Drift Monitoring (NEW!)
+
+Monitor prediction logs in real-time and get immediate alerts when drift is detected:
+
+```bash
+# Auto-detect today's log file
+python realtime_drift_analyzer.py --auto
+
+# Monitor specific log file
+python realtime_drift_analyzer.py --log-file logs/predictions_20251214.jsonl
+
+# Custom window size and sensitivity
+python realtime_drift_analyzer.py --auto --window-size 50 --delta 0.001
+
+# Quiet mode (only show drift alerts)
+python realtime_drift_analyzer.py --auto --quiet
+```
+
+**How it works:**
+- Monitors JSONL log file using file tailing (like `tail -f`)
+- Processes predictions as they arrive in real-time
+- Maintains sliding window in memory
+- Triggers ADWIN detection when window completes
+- Prints alerts immediately to console
+- Press Ctrl+C to see final summary
+
+**Parameters:**
+- `--auto`: Auto-detect today's log file (logs/predictions_YYYYMMDD.jsonl)
+- `--log-file`: Path to specific prediction log file
+- `--window-size`: Predictions per window (default: 100)
+- `--delta`: ADWIN sensitivity (default: 0.002)
+- `--quiet`: Only show drift alerts (no status updates)
+
+**Example Output:**
+```
+======================================================================
+🚨 DRIFT ALERT - Window 2
+======================================================================
+Timestamp:        2025-12-14T20:45:32.123456Z
+Status:           DRIFT DETECTED
+Drift Statistic:  0.429292
+Baseline Mean:    0.071059
+Current Mean:     0.500350
+Current Std:      0.320717
+Predictions:      100
+
+🚨 DRIFT DETECTED! Mean shifted from 0.0711 to 0.5004 (+604.2%)
+======================================================================
+```
+
+See [REALTIME_ANALYZER_GUIDE.md](REALTIME_ANALYZER_GUIDE.md) for detailed documentation.
 
 ### Visualization Dashboard (Epic 4)
 

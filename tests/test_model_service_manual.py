@@ -6,17 +6,29 @@ import requests
 import json
 import time
 from pathlib import Path
+import pytest
 
 
+def _check_service_running():
+    """Check if model service is running."""
+    try:
+        response = requests.get("http://localhost:8000/", timeout=1)
+        return response.status_code == 200
+    except requests.exceptions.RequestException:
+        return False
+
+
+@pytest.mark.skipif(not _check_service_running(), reason="Model service not running on localhost:8000")
 def test_health_check():
     """Test the health check endpoint."""
     print("Testing health check endpoint...")
     response = requests.get("http://localhost:8000/")
     print(f"Status: {response.status_code}")
     print(f"Response: {response.json()}\n")
-    return response.status_code == 200
+    assert response.status_code == 200
 
 
+@pytest.mark.skipif(not _check_service_running(), reason="Model service not running on localhost:8000")
 def test_predict_endpoint():
     """Test the /predict endpoint with sample data."""
     print("Testing /predict endpoint...")
@@ -36,17 +48,18 @@ def test_predict_endpoint():
     )
 
     print(f"Status: {response.status_code}")
-    if response.status_code == 200:
-        result = response.json()
-        print(f"Response:")
-        print(json.dumps(result, indent=2))
-        print()
-        return True
-    else:
-        print(f"Error: {response.text}\n")
-        return False
+    assert response.status_code == 200
+    result = response.json()
+    print(f"Response:")
+    print(json.dumps(result, indent=2))
+    print()
+
+    # Verify response contains required fields
+    assert "prediction" in result
+    assert 0 <= result["prediction"] <= 1
 
 
+@pytest.mark.skipif(not _check_service_running(), reason="Model service not running on localhost:8000")
 def test_multiple_predictions():
     """Test multiple predictions to verify logging."""
     print("Testing multiple predictions...")
@@ -62,17 +75,15 @@ def test_multiple_predictions():
             "http://localhost:8000/predict",
             json={"features": features}
         )
-        if response.status_code == 200:
-            result = response.json()
-            print(f"  Test {i}: prediction={result['prediction']:.4f}")
-        else:
-            print(f"  Test {i}: FAILED")
-            return False
+        assert response.status_code == 200, f"Test {i}: FAILED with status {response.status_code}"
+        result = response.json()
+        print(f"  Test {i}: prediction={result['prediction']:.4f}")
+        assert "prediction" in result
+        assert 0 <= result["prediction"] <= 1
 
         time.sleep(0.1)  # Small delay between requests
 
     print()
-    return True
 
 
 def verify_logs():
